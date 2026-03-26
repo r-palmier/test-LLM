@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brain Tumor MRI Classification — Revision App (Pass 1)</title>
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #202a44;
+      --text-primary: #e6f1ff;
+      --text-muted: #9db2ce;
+      --accent: #4cc9f0;
+      --accent-2: #9d4edd;
+      --good: #2ec4b6;
+      --warn: #f4a261;
+      --danger: #ef476f;
+      --border: #314167;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(160deg, #141427 0%, #121f38 100%);
+      color: var(--text-primary);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: rgba(15, 24, 44, 0.95);
+      border-right: 1px solid var(--border);
+      padding: 1.1rem 0.9rem;
+    }
+    .brand {
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.3;
+      color: #fff;
+    }
+    .brand p { margin: 0.4rem 0 0; color: var(--text-muted); font-size: 0.83rem; }
+
+    .nav-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+    .nav-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-primary);
+      padding: 0.72rem 0.75rem;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.94rem;
+    }
+    .nav-btn:hover, .nav-btn.active {
+      background: rgba(76, 201, 240, 0.15);
+      border-color: rgba(76, 201, 240, 0.35);
+    }
+
+    main { padding: 1.25rem; }
+    section {
+      display: none;
+      max-width: 1200px;
+      margin: 0 auto 2rem;
+      animation: fade 0.25s ease;
+    }
+    section.active { display: block; }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero, .panel {
+      background: linear-gradient(155deg, rgba(32, 42, 68, 0.96), rgba(20, 30, 52, 0.96));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    h2 { margin: 0 0 0.55rem; font-size: 1.5rem; }
+    h3 { margin: 0.2rem 0 0.45rem; font-size: 1.1rem; }
+    p, li { line-height: 1.55; color: #e7ecff; }
+    .muted { color: var(--text-muted); }
+
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .badge {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.25rem 0.6rem;
+      background: rgba(157, 78, 221, 0.14);
+      font-size: 0.83rem;
+    }
+
+    .kpi-grid {
+      display: grid;
+      gap: 0.6rem;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      margin-top: 0.8rem;
+    }
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(9, 17, 30, 0.6);
+      padding: 0.7rem;
+      text-align: center;
+    }
+    .kpi strong { font-size: 1.1rem; color: var(--accent); display: block; }
+    .kpi span { color: var(--text-muted); font-size: 0.83rem; }
+
+    .btn {
+      border: none;
+      background: linear-gradient(100deg, var(--accent), #3a86ff);
+      color: #04152b;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 0.62rem 0.9rem;
+      cursor: pointer;
+      margin-top: 0.75rem;
+    }
+
+    .chapter {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(20, 35, 63, 0.92);
+      padding: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .chapter-grid {
+      display: grid;
+      gap: 0.7rem;
+      grid-template-columns: 1.35fr 1fr;
+    }
+    .list-tight { margin: 0.45rem 0 0.3rem; padding-left: 1.1rem; }
+    .list-tight li { margin-bottom: 0.25rem; }
+
+    .svg-wrap {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(10, 16, 31, 0.85);
+      padding: 0.4rem;
+      overflow-x: auto;
+    }
+
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      background: rgba(46, 196, 182, 0.2);
+      border: 1px solid rgba(46, 196, 182, 0.5);
+      color: #b4fff5;
+      font-size: 0.77rem;
+      padding: 0.13rem 0.45rem;
+      margin-right: 0.35rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .note {
+      border-left: 3px solid var(--warn);
+      padding-left: 0.65rem;
+      color: #ffe7c2;
+      margin: 0.6rem 0;
+    }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      nav {
+        height: auto;
+        position: sticky;
+        z-index: 50;
+      }
+      .nav-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .nav-btn { justify-content: center; }
+      .nav-btn span.label { display: none; }
+      .chapter-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 767px) {
+      .nav-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav aria-label="Sidebar navigation">
+      <div class="brand">
+        <h1>Brain Tumor MRI Review</h1>
+        <p>Interactive oral exam preparation</p>
+      </div>
+      <ul class="nav-list">
+        <li><button class="nav-btn active" data-target="home"><span>🏠</span><span class="label">Home</span></button></li>
+        <li><button class="nav-btn" data-target="learn"><span>📘</span><span class="label">Learn</span></button></li>
+        <li><button class="nav-btn" data-target="flashcards"><span>🧠</span><span class="label">Flashcards</span></button></li>
+        <li><button class="nav-btn" data-target="quiz"><span>📝</span><span class="label">Quiz</span></button></li>
+        <li><button class="nav-btn" data-target="practice"><span>🎤</span><span class="label">Practice</span></button></li>
+        <li><button class="nav-btn" data-target="glossary"><span>📚</span><span class="label">Glossary</span></button></li>
+      </ul>
+    </nav>
+
+    <main>
+      <section id="home" class="active">
+        <article class="hero">
+          <h2>Brain Tumor MRI Classification (15 Classes)</h2>
+          <p>This project builds an end-to-end medical imaging pipeline to classify brain MRI scans into 15 tumor classes and normal cases. It also adds anomaly detection and Grad-CAM explainability to support safer interpretation in clinical workflows.</p>
+          <div class="badge-row">
+            <span class="badge">Python 3.12</span>
+            <span class="badge">PySpark 3.5.5</span>
+            <span class="badge">TensorFlow 2.20</span>
+            <span class="badge">Streamlit</span>
+            <span class="badge">PNG → Parquet → TFRecord</span>
+            <span class="badge">Config-driven YAML</span>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi"><strong>4,479</strong><span>Total images</span></div>
+            <div class="kpi"><strong>15</strong><span>Classes</span></div>
+            <div class="kpi"><strong>T1/T2/T1C+</strong><span>MRI modalities</span></div>
+            <div class="kpi"><strong>68.6%</strong><span>Test accuracy</span></div>
+            <div class="kpi"><strong>441</strong><span>Normal images (AE)</span></div>
+            <div class="kpi"><strong>16</strong><span>TFRecord shards</span></div>
+          </div>
+          <button class="btn" data-target="learn">Start Reviewing</button>
+        </article>
+
+        <article class="panel">
+          <h3>6-Step Project Pipeline</h3>
+          <div class="svg-wrap">
+            <svg width="1120" height="250" viewBox="0 0 1120 250" role="img" aria-label="Pipeline diagram">
+              <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#4cc9f0"></path>
+                </marker>
+              </defs>
+              <rect x="10" y="70" width="170" height="100" rx="10" fill="#1f2f55" stroke="#4cc9f0"/>
+              <text x="25" y="95" fill="#eaf2ff" font-size="14">1) Spark Preprocess</text>
+              <text x="25" y="118" fill="#a5c3e6" font-size="12">binaryFile → Bronze</text>
+              <text x="25" y="138" fill="#a5c3e6" font-size="12">SHA-256 + labels</text>
+
+              <rect x="195" y="70" width="170" height="100" rx="10" fill="#1f2f55" stroke="#4cc9f0"/>
+              <text x="210" y="95" fill="#eaf2ff" font-size="14">2) Spark Transform</text>
+              <text x="210" y="118" fill="#a5c3e6" font-size="12">keep_aspect_pad</text>
+              <text x="210" y="138" fill="#a5c3e6" font-size="12">Silver + PNG bytes</text>
+
+              <rect x="380" y="70" width="170" height="100" rx="10" fill="#1f2f55" stroke="#4cc9f0"/>
+              <text x="395" y="95" fill="#eaf2ff" font-size="14">3) Spark Split</text>
+              <text x="395" y="118" fill="#a5c3e6" font-size="12">seed=42</text>
+              <text x="395" y="138" fill="#a5c3e6" font-size="12">70/15/15</text>
+
+              <rect x="565" y="70" width="170" height="100" rx="10" fill="#1f2f55" stroke="#4cc9f0"/>
+              <text x="580" y="95" fill="#eaf2ff" font-size="14">4) TFRecord Export</text>
+              <text x="580" y="118" fill="#a5c3e6" font-size="12">16 shards</text>
+              <text x="580" y="138" fill="#a5c3e6" font-size="12">image_bytes + label_idx</text>
+
+              <rect x="750" y="30" width="170" height="65" rx="10" fill="#2b2550" stroke="#9d4edd"/>
+              <text x="765" y="58" fill="#eaf2ff" font-size="14">5) CNN Classifier</text>
+              <text x="765" y="78" fill="#d8b5ff" font-size="12">.keras model</text>
+
+              <rect x="750" y="105" width="170" height="65" rx="10" fill="#2b2550" stroke="#9d4edd"/>
+              <text x="765" y="133" fill="#eaf2ff" font-size="14">6) Autoencoder</text>
+              <text x="765" y="153" fill="#d8b5ff" font-size="12">thresholds calibrated</text>
+
+              <rect x="935" y="70" width="170" height="100" rx="10" fill="#143b35" stroke="#2ec4b6"/>
+              <text x="950" y="95" fill="#eafffb" font-size="14">Inference + Grad-CAM</text>
+              <text x="950" y="118" fill="#b8fff6" font-size="12">status workflow async</text>
+              <text x="950" y="138" fill="#b8fff6" font-size="12">result.json + artifacts</text>
+
+              <line x1="180" y1="120" x2="195" y2="120" stroke="#4cc9f0" stroke-width="3" marker-end="url(#arrow)"/>
+              <line x1="365" y1="120" x2="380" y2="120" stroke="#4cc9f0" stroke-width="3" marker-end="url(#arrow)"/>
+              <line x1="550" y1="120" x2="565" y2="120" stroke="#4cc9f0" stroke-width="3" marker-end="url(#arrow)"/>
+              <line x1="735" y1="90" x2="750" y2="62" stroke="#9d4edd" stroke-width="3" marker-end="url(#arrow)"/>
+              <line x1="735" y1="120" x2="750" y2="137" stroke="#9d4edd" stroke-width="3" marker-end="url(#arrow)"/>
+              <line x1="920" y1="62" x2="935" y2="95" stroke="#2ec4b6" stroke-width="3" marker-end="url(#arrow)"/>
+              <line x1="920" y1="137" x2="935" y2="137" stroke="#2ec4b6" stroke-width="3" marker-end="url(#arrow)"/>
+            </svg>
+          </div>
+        </article>
+      </section>
+
+      <section id="learn">
+        <article class="hero">
+          <h2>Learn — Interactive Course (6 Chapters)</h2>
+          <p class="muted">This section is designed for a beginner preparing an oral defense. Every chapter uses exact project values, practical examples, and a visual diagram.</p>
+        </article>
+
+        <article class="chapter">
+          <h3>Chapter 1 — Apache Spark: Distributed ETL</h3>
+          <div class="chapter-grid">
+            <div>
+              <p>Spark is a distributed data engine. In this project, Spark was a project constraint, but it also fits the job: thousands of image files, metadata extraction, partitioned writes, and scalable ETL. The project runs with <span class="pill">master=local[2]</span> and uses <span class="pill">DataFrame API only</span>.</p>
+              <ul class="list-tight">
+                <li><strong>Architecture:</strong> Driver plans jobs, Executors run tasks on partitions.</li>
+                <li><strong>Lazy evaluation:</strong> <code>.filter()</code> and <code>.withColumn()</code> are transformations; Spark executes when an action appears (<code>.count()</code>, <code>.write.parquet()</code>).</li>
+                <li><strong>Image loading:</strong> <code>spark.read.format("binaryFile")</code> ingests raw PNG files with path and bytes metadata.</li>
+                <li><strong>Partitioning:</strong> Bronze/Silver by pathology + modality; TFRecord export by split + shard_id; 8 Spark partitions used in ETL steps.</li>
+                <li><strong>Shuffle cost:</strong> the label mapping join in preprocess may trigger shuffle; expensive because data moves between partitions.</li>
+                <li><strong>Parquet advantage:</strong> columnar, compressed, supports predicate pushdown, and can store processed PNG bytes as <code>BinaryType</code>.</li>
+                <li><strong>mapPartitions():</strong> transform_job processes records image-by-image with Pillow inside each partition efficiently.</li>
+              </ul>
+              <p class="note">Key oral point: Spark here is both a mandatory technology and a valid distributed ETL choice for image manifests and format conversion.</p>
+            </div>
+            <div class="svg-wrap">
+              <svg width="470" height="240" viewBox="0 0 470 240">
+                <rect x="20" y="85" width="110" height="70" rx="10" fill="#25385f" stroke="#4cc9f0"/>
+                <text x="43" y="122" fill="#e8f4ff" font-size="15">Driver</text>
+                <rect x="180" y="20" width="120" height="55" rx="10" fill="#2c2850" stroke="#9d4edd"/>
+                <text x="197" y="52" fill="#f3e9ff" font-size="14">Executor A</text>
+                <rect x="180" y="92" width="120" height="55" rx="10" fill="#2c2850" stroke="#9d4edd"/>
+                <text x="197" y="124" fill="#f3e9ff" font-size="14">Executor B</text>
+                <rect x="180" y="164" width="120" height="55" rx="10" fill="#2c2850" stroke="#9d4edd"/>
+                <text x="197" y="196" fill="#f3e9ff" font-size="14">Executor C</text>
+                <rect x="332" y="20" width="115" height="35" rx="8" fill="#163b37" stroke="#2ec4b6"/>
+                <text x="345" y="42" fill="#e8fffb" font-size="12">Part 1 (T1)</text>
+                <rect x="332" y="62" width="115" height="35" rx="8" fill="#163b37" stroke="#2ec4b6"/>
+                <text x="345" y="84" fill="#e8fffb" font-size="12">Part 2 (T2)</text>
+                <rect x="332" y="104" width="115" height="35" rx="8" fill="#163b37" stroke="#2ec4b6"/>
+                <text x="339" y="126" fill="#e8fffb" font-size="12">Part 3 (T1C+)</text>
+                <rect x="332" y="146" width="115" height="35" rx="8" fill="#163b37" stroke="#2ec4b6"/>
+                <text x="345" y="168" fill="#e8fffb" font-size="12">Part 4 (split)</text>
+                <line x1="130" y1="120" x2="180" y2="48" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="130" y1="120" x2="180" y2="120" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="130" y1="120" x2="180" y2="192" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="300" y1="48" x2="332" y2="38" stroke="#9d4edd" stroke-width="2"/>
+                <line x1="300" y1="120" x2="332" y2="120" stroke="#9d4edd" stroke-width="2"/>
+                <line x1="300" y1="192" x2="332" y2="163" stroke="#9d4edd" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <article class="chapter">
+          <h3>Chapter 2 — ML & CNN with TensorFlow</h3>
+          <div class="chapter-grid">
+            <div>
+              <p>A neural network is a stack of layers that learns patterns from examples. A CNN is specialized for images: convolution filters detect local patterns, BatchNorm stabilizes training, and pooling compresses spatial dimensions.</p>
+              <ul class="list-tight">
+                <li><strong>Classifier architecture:</strong> Input (224×224×1) → Conv(32) → BN → MaxPool → Conv(64) → BN → MaxPool → Conv(128, <code>final_conv_features</code>) → BN → MaxPool → GAP → Dense(512) → Dropout(0.5) → Dense(15, softmax).</li>
+                <li><strong>Hyperparameters:</strong> Adam lr=0.001, batch size=32, max epochs=50, SparseCategoricalCrossentropy, SparseCategoricalAccuracy.</li>
+                <li><strong>Data pipeline:</strong> interleave(cycle_length=16) → shuffle(2048) → map(parse) → repeat → batch(32) → prefetch(AUTOTUNE).</li>
+                <li><strong>Generalization reading:</strong> val 73.7% vs test 68.6% indicates mild overfitting (not catastrophic).</li>
+                <li><strong>Callbacks:</strong> EarlyStopping(patience=10, restore best weights) and ModelCheckpoint(save_best_only, monitor val_accuracy).</li>
+              </ul>
+            </div>
+            <div class="svg-wrap">
+              <svg width="470" height="260" viewBox="0 0 470 260">
+                <rect x="10" y="110" width="70" height="40" rx="8" fill="#22375f" stroke="#4cc9f0"/>
+                <text x="18" y="134" fill="#eaf4ff" font-size="12">224x224x1</text>
+                <rect x="95" y="95" width="60" height="70" rx="8" fill="#2a2d58" stroke="#9d4edd"/>
+                <text x="107" y="134" fill="#f0e6ff" font-size="12">Conv32</text>
+                <rect x="165" y="100" width="42" height="60" rx="8" fill="#1e425f" stroke="#4cc9f0"/>
+                <text x="173" y="134" fill="#e8f7ff" font-size="10">Pool</text>
+                <rect x="215" y="85" width="60" height="90" rx="8" fill="#2a2d58" stroke="#9d4edd"/>
+                <text x="227" y="134" fill="#f0e6ff" font-size="12">Conv64</text>
+                <rect x="285" y="95" width="42" height="70" rx="8" fill="#1e425f" stroke="#4cc9f0"/>
+                <text x="292" y="134" fill="#e8f7ff" font-size="10">Pool</text>
+                <rect x="335" y="72" width="70" height="116" rx="8" fill="#2a2d58" stroke="#9d4edd"/>
+                <text x="343" y="120" fill="#f0e6ff" font-size="12">Conv128</text>
+                <text x="340" y="138" fill="#f0e6ff" font-size="10">final_conv</text>
+                <text x="346" y="151" fill="#f0e6ff" font-size="10">_features</text>
+                <rect x="415" y="95" width="45" height="70" rx="8" fill="#143b35" stroke="#2ec4b6"/>
+                <text x="423" y="124" fill="#e9fffb" font-size="10">GAP</text>
+                <text x="420" y="139" fill="#e9fffb" font-size="10">Dense</text>
+                <text x="420" y="154" fill="#e9fffb" font-size="10">15</text>
+                <line x1="80" y1="130" x2="95" y2="130" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="155" y1="130" x2="165" y2="130" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="207" y1="130" x2="215" y2="130" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="275" y1="130" x2="285" y2="130" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="327" y1="130" x2="335" y2="130" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="405" y1="130" x2="415" y2="130" stroke="#4cc9f0" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <article class="chapter">
+          <h3>Chapter 3 — Data Pipeline (Bronze / Silver / TFRecord)</h3>
+          <div class="chapter-grid">
+            <div>
+              <p>The Bronze/Silver pattern keeps raw provenance separate from transformed data. Bronze stores traceable metadata from raw files. Silver adds standardized 224×224 grayscale bytes, ready for deterministic splitting and export.</p>
+              <ul class="list-tight">
+                <li><strong>Bronze columns:</strong> image_id (SHA-256), raw_path, pathology, label_idx, modality, file_size.</li>
+                <li><strong>Silver columns:</strong> Bronze + processed_bytes, processed_file_size, orig_width, orig_height, new_width, new_height, channels, transform_version.</li>
+                <li><strong>keep_aspect_pad:</strong> convert L mode → thumbnail Lanczos (no stretching) → paste centered on black 224×224 canvas.</li>
+                <li><strong>Split:</strong> seed=42 and ratios [0.7, 0.15, 0.15] ≈ 3,135 train / 672 val / 672 test from 4,479 images.</li>
+                <li><strong>TFRecord export:</strong> each example stores image_bytes + label_idx; 16 shards partitioned by split and shard_id.</li>
+                <li><strong>Why TFRecord:</strong> efficient sequential I/O and better tf.data parallel interleave/prefetch performance than loading individual PNG files.</li>
+              </ul>
+            </div>
+            <div class="svg-wrap">
+              <svg width="470" height="250" viewBox="0 0 470 250">
+                <rect x="20" y="95" width="90" height="50" rx="8" fill="#24395f" stroke="#4cc9f0"/>
+                <text x="38" y="124" fill="#eaf4ff" font-size="12">4479 PNG</text>
+                <rect x="130" y="95" width="90" height="50" rx="8" fill="#2c2b55" stroke="#9d4edd"/>
+                <text x="151" y="124" fill="#f1e9ff" font-size="12">Bronze</text>
+                <rect x="240" y="95" width="90" height="50" rx="8" fill="#2c2b55" stroke="#9d4edd"/>
+                <text x="263" y="124" fill="#f1e9ff" font-size="12">Silver</text>
+                <rect x="350" y="95" width="95" height="50" rx="8" fill="#1e425f" stroke="#4cc9f0"/>
+                <text x="374" y="124" fill="#eaf4ff" font-size="12">Split</text>
+                <rect x="130" y="170" width="220" height="45" rx="8" fill="#143b35" stroke="#2ec4b6"/>
+                <text x="149" y="197" fill="#e9fffb" font-size="12">16 TFRecord shards for training</text>
+                <line x1="110" y1="120" x2="130" y2="120" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="220" y1="120" x2="240" y2="120" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="330" y1="120" x2="350" y2="120" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="398" y1="145" x2="350" y2="170" stroke="#2ec4b6" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <article class="chapter">
+          <h3>Chapter 4 — Anomaly Detection (Autoencoder)</h3>
+          <div class="chapter-grid">
+            <div>
+              <p>An autoencoder learns to reconstruct what it sees during training. Here, it is trained only on <strong>_NORMAL</strong> scans (441 train+val normal images), so it learns normal anatomy patterns. Unusual cases produce higher reconstruction error.</p>
+              <ul class="list-tight">
+                <li><strong>Encoder:</strong> Conv32/64/128/256 (stride=2, same, relu) + BatchNorm → Flatten → Dense(128 bottleneck).</li>
+                <li><strong>Decoder:</strong> Dense(14×14×256) → Reshape → Conv2DTranspose 128/64/32/1 + BatchNorm → Resizing(224,224), final sigmoid.</li>
+                <li><strong>Loss and optimizer:</strong> MSE with Adam(lr=0.001), batch 32, max 50 epochs, EarlyStopping on val_loss with patience 10.</li>
+                <li><strong>Error metric:</strong> per-pixel squared difference, then max pixel error per image.</li>
+                <li><strong>Threshold calibration:</strong> strict=0.9999 (max of normal max-errors), p99=0.9946, p95=0.9420.</li>
+              </ul>
+            </div>
+            <div class="svg-wrap">
+              <svg width="470" height="245" viewBox="0 0 470 245">
+                <rect x="15" y="96" width="75" height="48" rx="8" fill="#24395f" stroke="#4cc9f0"/>
+                <text x="26" y="125" fill="#eaf4ff" font-size="12">Input MRI</text>
+                <polygon points="110,82 210,82 250,120 210,158 110,158" fill="#2b2954" stroke="#9d4edd"/>
+                <text x="145" y="124" fill="#f3ebff" font-size="12">Encoder</text>
+                <rect x="258" y="98" width="62" height="44" rx="8" fill="#163b37" stroke="#2ec4b6"/>
+                <text x="270" y="123" fill="#eafffb" font-size="11">z=128</text>
+                <polygon points="330,82 430,82 455,120 430,158 330,158" fill="#2b2954" stroke="#9d4edd"/>
+                <text x="363" y="124" fill="#f3ebff" font-size="12">Decoder</text>
+                <rect x="170" y="180" width="140" height="42" rx="8" fill="#1e425f" stroke="#4cc9f0"/>
+                <text x="180" y="204" fill="#eaf4ff" font-size="11">Pixel MSE + max error</text>
+                <line x1="90" y1="120" x2="110" y2="120" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="250" y1="120" x2="258" y2="120" stroke="#2ec4b6" stroke-width="2"/>
+                <line x1="320" y1="120" x2="330" y2="120" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="240" y1="158" x2="240" y2="180" stroke="#4cc9f0" stroke-width="2"/>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <article class="chapter">
+          <h3>Chapter 5 — Explainability with Grad-CAM</h3>
+          <div class="chapter-grid">
+            <div>
+              <p>In medical imaging, explainability helps clinicians understand why the model predicts a class. Grad-CAM highlights regions that influenced the predicted class score.</p>
+              <ul class="list-tight">
+                <li>Target layer: <code>final_conv_features</code> (3rd Conv2D, 128 filters). If missing, fallback to last 4D layer.</li>
+                <li>Computation: GradientTape on predicted class score → gradients wrt feature maps → spatial mean of gradients → weighted sum of maps → ReLU → normalize to [0,1].</li>
+                <li>Artifact outputs: heatmap PNG + overlay PNG.</li>
+                <li>Overlay rule: 65% original image + 35% red heatmap.</li>
+              </ul>
+              <p class="note">Oral tip: Grad-CAM does not prove causal diagnosis. It provides visual evidence to support model trust and debugging.</p>
+            </div>
+            <div class="svg-wrap">
+              <svg width="470" height="240" viewBox="0 0 470 240">
+                <rect x="18" y="95" width="80" height="50" rx="8" fill="#24395f" stroke="#4cc9f0"/>
+                <text x="32" y="124" fill="#eaf4ff" font-size="12">Input</text>
+                <rect x="120" y="90" width="95" height="60" rx="8" fill="#2b2954" stroke="#9d4edd"/>
+                <text x="147" y="124" fill="#f3ebff" font-size="12">CNN</text>
+                <rect x="240" y="64" width="95" height="45" rx="8" fill="#2b2954" stroke="#9d4edd"/>
+                <text x="251" y="92" fill="#f3ebff" font-size="11">Feature maps</text>
+                <rect x="240" y="130" width="95" height="45" rx="8" fill="#2b2954" stroke="#9d4edd"/>
+                <text x="264" y="158" fill="#f3ebff" font-size="11">Gradients</text>
+                <rect x="360" y="95" width="92" height="50" rx="8" fill="#143b35" stroke="#2ec4b6"/>
+                <text x="378" y="124" fill="#eafffb" font-size="12">Heatmap</text>
+                <line x1="98" y1="120" x2="120" y2="120" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="215" y1="120" x2="240" y2="86" stroke="#9d4edd" stroke-width="2"/>
+                <line x1="215" y1="120" x2="240" y2="152" stroke="#9d4edd" stroke-width="2"/>
+                <line x1="335" y1="86" x2="360" y2="120" stroke="#2ec4b6" stroke-width="2"/>
+                <line x1="335" y1="152" x2="360" y2="120" stroke="#2ec4b6" stroke-width="2"/>
+                <text x="168" y="26" fill="#b8c9e6" font-size="11">final_conv_features + GradientTape</text>
+                <text x="335" y="206" fill="#ffdadf" font-size="11">Overlay = 65% image + 35% red map</text>
+              </svg>
+            </div>
+          </div>
+        </article>
+
+        <article class="chapter">
+          <h3>Chapter 6 — Code Architecture & Async Inference</h3>
+          <div class="chapter-grid">
+            <div>
+              <p>The project is modular and config-driven. Spark jobs, TensorFlow training, and async inference are split into dedicated modules under <code>src/</code>, while each job has its YAML config in <code>conf/</code>.</p>
+              <ul class="list-tight">
+                <li><strong>Config-driven:</strong> train.yaml and train_anomaly.yaml define batch size, epochs, learning rate, patience, latent_dim and normal class.</li>
+                <li><strong>Async flow:</strong> upload → <code>status.json=pending</code> → worker polling every 2s → queued → resolving_input → building_bronze → building_silver → running_inference → writing_results → done/failed.</li>
+                <li><strong>Worker outputs:</strong> result.json, predictions.parquet, Grad-CAM and reconstruction artifacts.</li>
+                <li><strong>Model registry:</strong> centralized loading of .keras models and threshold JSON files.</li>
+              </ul>
+            </div>
+            <div class="svg-wrap">
+              <svg width="470" height="250" viewBox="0 0 470 250">
+                <rect x="16" y="26" width="110" height="40" rx="8" fill="#24395f" stroke="#4cc9f0"/>
+                <text x="26" y="50" fill="#eaf4ff" font-size="12">Upload to requests/</text>
+                <rect x="145" y="26" width="95" height="40" rx="8" fill="#2b2954" stroke="#9d4edd"/>
+                <text x="162" y="50" fill="#f3ebff" font-size="12">pending</text>
+                <rect x="260" y="26" width="90" height="40" rx="8" fill="#2b2954" stroke="#9d4edd"/>
+                <text x="282" y="50" fill="#f3ebff" font-size="12">queued</text>
+                <rect x="365" y="26" width="88" height="40" rx="8" fill="#2b2954" stroke="#9d4edd"/>
+                <text x="374" y="50" fill="#f3ebff" font-size="12">resolving</text>
+
+                <rect x="30" y="95" width="120" height="40" rx="8" fill="#1e425f" stroke="#4cc9f0"/>
+                <text x="45" y="119" fill="#eaf4ff" font-size="12">building_bronze</text>
+                <rect x="170" y="95" width="120" height="40" rx="8" fill="#1e425f" stroke="#4cc9f0"/>
+                <text x="185" y="119" fill="#eaf4ff" font-size="12">building_silver</text>
+                <rect x="310" y="95" width="135" height="40" rx="8" fill="#1e425f" stroke="#4cc9f0"/>
+                <text x="323" y="119" fill="#eaf4ff" font-size="12">running_inference</text>
+
+                <rect x="70" y="166" width="135" height="42" rx="8" fill="#143b35" stroke="#2ec4b6"/>
+                <text x="83" y="191" fill="#eafffb" font-size="12">writing_results</text>
+                <rect x="235" y="166" width="95" height="42" rx="8" fill="#143b35" stroke="#2ec4b6"/>
+                <text x="265" y="191" fill="#eafffb" font-size="12">done</text>
+                <rect x="350" y="166" width="95" height="42" rx="8" fill="#4d2539" stroke="#ef476f"/>
+                <text x="374" y="191" fill="#ffd9e0" font-size="12">failed</text>
+
+                <line x1="126" y1="46" x2="145" y2="46" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="240" y1="46" x2="260" y2="46" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="350" y1="46" x2="365" y2="46" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="408" y1="66" x2="380" y2="95" stroke="#9d4edd" stroke-width="2"/>
+                <line x1="150" y1="115" x2="170" y2="115" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="290" y1="115" x2="310" y2="115" stroke="#4cc9f0" stroke-width="2"/>
+                <line x1="350" y1="135" x2="205" y2="166" stroke="#2ec4b6" stroke-width="2"/>
+                <line x1="235" y1="187" x2="205" y2="187" stroke="#2ec4b6" stroke-width="2"/>
+                <line x1="330" y1="187" x2="350" y2="187" stroke="#ef476f" stroke-width="2"/>
+                <text x="16" y="230" fill="#9db2ce" font-size="11">Worker polls requests every 2 seconds.</text>
+              </svg>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="flashcards">
+        <article class="panel"><h2>Flashcards</h2><p>Planned for Pass 2.</p></article>
+      </section>
+      <section id="quiz">
+        <article class="panel"><h2>Quiz</h2><p>Planned for Pass 2.</p></article>
+      </section>
+      <section id="practice">
+        <article class="panel"><h2>Practice</h2><p>Planned for Pass 3.</p></article>
+      </section>
+      <section id="glossary">
+        <article class="panel"><h2>Glossary</h2><p>Planned for Pass 3.</p></article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ===== Navigation module =====
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('main section');
+
+    function switchSection(targetId) {
+      sections.forEach(section => section.classList.toggle('active', section.id === targetId));
+      navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.target === targetId));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    navButtons.forEach(btn => btn.addEventListener('click', () => switchSection(btn.dataset.target)));
+    document.querySelector('.btn[data-target="learn"]').addEventListener('click', () => switchSection('learn'));
+
+    // ===== Local storage scaffold for future modules =====
+    const revisionState = JSON.parse(localStorage.getItem('mriRevisionState') || '{"flashcardsSeen":[],"bestQuizScore":0,"completedOral":[]}');
+    localStorage.setItem('mriRevisionState', JSON.stringify(revisionState));
+  </script>
+</body>
+</html>
+<!-- END PASS 1 — CONTINUE WITH PASS 2 -->
